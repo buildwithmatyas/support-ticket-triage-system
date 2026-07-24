@@ -207,9 +207,9 @@ All scenarios produced the expected AI classification and priority assignment.
 
 Created by **YOUR NAME**
 
-GitHub: https://github.com/YOUR_USERNAME
+GitHub: https://github.com/buildwithmatyas
 
-LinkedIn: https://www.linkedin.com/in/YOUR_PROFILE/
+LinkedIn: https://www.linkedin.com/in/buildwithmatyas/
 
 ---
 
