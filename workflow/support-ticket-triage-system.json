@@ -1,0 +1,794 @@
+{
+  "name": "Scenario-11-AI-Customer-Support-&-Ticket-Triage-System",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "labelIds": [
+            "Label_1411098239477668579"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6844488d-ea02-4425-b5a5-96be4a63d2e0",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Xiv6FjlERgeX4zrN",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "72d9db47-9fba-4949-a7ce-81ae7f652a12",
+              "name": "TicketID",
+              "value": "={{ Date.now().toString() }}",
+              "type": "string"
+            },
+            {
+              "id": "6590e110-f5dc-45ee-af8b-5a573cf984b9",
+              "name": "CustomerName",
+              "value": "={{$json.From}}",
+              "type": "string"
+            },
+            {
+              "id": "810fd76b-7732-4b1b-9b98-2b190114f8fd",
+              "name": "Email",
+              "value": "={{$json.From}}",
+              "type": "string"
+            },
+            {
+              "id": "e02a655f-0426-442e-acc6-60f03c994c54",
+              "name": "Subject",
+              "value": "={{$json.Subject}}",
+              "type": "string"
+            },
+            {
+              "id": "2a2894d4-b008-4f65-87f2-93424ab3ebc3",
+              "name": "Message",
+              "value": "={{$json.snippet}}",
+              "type": "string"
+            },
+            {
+              "id": "4ebcb534-be89-4033-bdf8-eeb0c578b034",
+              "name": "CreatedAt",
+              "value": "={{$json.internalDate}}",
+              "type": "string"
+            },
+            {
+              "id": "3d9d2103-a4a0-4616-9168-7d3cb90c7019",
+              "name": "Category",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "299b2528-d431-4274-b9d6-db40e3003903",
+              "name": "Priority",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "6e24f4e4-f27b-41c6-8050-e0f9de491c02",
+              "name": "Status",
+              "value": "Open",
+              "type": "string"
+            },
+            {
+              "id": "33ae6b4c-e8cd-46f7-bbb7-112d2048ac99",
+              "name": "AssignedTo",
+              "value": "Unassigned",
+              "type": "string"
+            },
+            {
+              "id": "4df4066e-2353-4e09-acde-4e675b63736d",
+              "name": "Source",
+              "value": "gmail",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "1f714817-7d28-4cbf-8edb-3dc35e39be32",
+      "name": "Normalize — Support Email"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are an AI customer support ticket classifier.\n\nYour task is to classify every support email into exactly ONE category.\n\nThe allowed categories are:\n\n- Technical\n- Billing\n- General\n\nClassification rules:\n\nTechnical\n- Login issues\n- Password reset problems\n- Bugs\n- Software errors\n- Features not working\n- Website or application issues\n- API errors\n- Performance problems\n- Service outages\n- Security incidents\n- Data loss\n\nBilling\n- Payments\n- Failed payments\n- Payment processing\n- Refund requests\n- Invoices\n- Subscriptions\n- Pricing\n- Charges\n- Credit cards\n- Account billing\n\nIMPORTANT:\nIf the primary issue is about money, payments, invoices, subscriptions, refunds, or billing, ALWAYS classify it as Billing, even if a technical system is involved.\n\nGeneral\n- General questions\n- Product information\n- Feature requests\n- Feedback\n- Account information\n- Any issue that does not clearly belong to Technical or Billing\n\nReturn ONLY one of these words:\n\nTechnical\nBilling\nGeneral\n\nNo explanation.\nNo punctuation."
+            },
+            {
+              "content": "=Subject:\n{{ $('Normalize — Support Email').item.json.Subject }}\n\nMessage:\n{{ $('Normalize — Support Email').item.json.Message }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "e63f1d10-bf0b-476f-9475-3c97db3b1c6b",
+      "name": "AI — Classify Ticket",
+      "credentials": {
+        "openAiApi": {
+          "id": "jYDDmRWGHCIrIA3X",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are an AI customer support priority classifier.\n\nYour task is to assign exactly ONE priority.\n\nAllowed priorities:\n\nHigh\nMedium\nLow\n\nDetermine priority based on business impact and urgency, NOT on the issue category.\n\nPriority definitions:\n\nHigh\n- Complete service outage\n- Security incident\n- Data loss\n- Customers cannot use the service\n- Business operations are stopped\n- Many users are affected\n- Immediate action is required\n\nMedium\n- Individual customer technical issues\n- Login problems\n- Password reset issues\n- Billing questions\n- Refund requests\n- Payment issues affecting a single customer\n- Problems that should be resolved soon but are not critical\n\nLow\n- General questions\n- Product information\n- Feature requests\n- Feedback\n- Non-urgent account questions\n\nIMPORTANT:\n\nA login issue for ONE customer is Medium.\n\nA refund request is Medium.\n\nA payment issue affecting ONE customer is Medium.\n\nA complete payment system failure affecting many customers is High.\n\nA website outage is High.\n\nReturn ONLY one word:\n\nHigh\nMedium\nLow\n\nNo explanation.\nNo punctuation."
+            },
+            {
+              "content": "=Category:\n{{ $json.Category }}\n\nSubject:\n{{ $('Normalize — Support Email').item.json.Subject }}\n\nMessage:\n{{ $('Normalize — Support Email').item.json.Message }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        880,
+        0
+      ],
+      "id": "dcc50104-1e64-49c4-90fa-5b2d50fb27c4",
+      "name": "AI — Assign Priority",
+      "credentials": {
+        "openAiApi": {
+          "id": "jYDDmRWGHCIrIA3X",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_SHEET_ID_HERE",
+          "mode": "list",
+          "cachedResultName": "Scenario-11-AI-Customer-Support-&-Ticket-Triage-System",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID_HERE/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "List 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID_HERE/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "TicketID": "={{ $('Normalize — Support Email').item.json.TicketID }}",
+            "CustomerName": "={{ $('Normalize — Support Email').item.json.CustomerName }}",
+            "Email": "={{ $('Normalize — Support Email').item.json.Email }}",
+            "Subject": "={{ $('Normalize — Support Email').item.json.Subject }}",
+            "Message": "={{ $('Normalize — Support Email').item.json.Message }}",
+            "Category": "={{ $('Format — Category').item.json.Category }}",
+            "Priority": "={{ $('Format — Priority').item.json.Priority }}",
+            "Status": "Open",
+            "CreatedAt": "={{ $('Normalize — Support Email').item.json.CreatedAt }}",
+            "AssignedTo": "Unassigned",
+            "Source": "gmail",
+            "UpdatedAt": "={{ DateTime.now().toISO() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "TicketID",
+              "displayName": "TicketID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "CustomerName",
+              "displayName": "CustomerName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Message",
+              "displayName": "Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "CreatedAt",
+              "displayName": "CreatedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "UpdatedAt",
+              "displayName": "UpdatedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "AssignedTo",
+              "displayName": "AssignedTo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1392,
+        0
+      ],
+      "id": "17500a02-0317-489d-89bd-e7b4e660ebaa",
+      "name": "CRM — Create Support Ticket",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6dvCTo3DxBtsZa2m",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f18ec673-9628-4536-a848-7d2af51671df",
+              "name": "Category",
+              "value": "={{ $json.output[0].content[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        704,
+        0
+      ],
+      "id": "13bfb29b-d65c-49f7-8b82-7898295222f8",
+      "name": "Format — Category"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a0c9f0cc-c978-4b76-8163-fd32648c72ff",
+              "name": "Priority",
+              "value": "={{ $json.output[0].content[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1184,
+        0
+      ],
+      "id": "2191b56a-40b1-431f-84ce-2a2c95d5fb96",
+      "name": "Format — Priority"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Format — Category').item.json.Category }}",
+                    "rightValue": "Technical",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "7b697657-0807-447e-8c2a-739b40fe5df2"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "5d35b011-825e-4812-ab17-e34a0ab3706e",
+                    "leftValue": "={{ $('Format — Category').item.json.Category }}",
+                    "rightValue": "Billing",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "efe55a9a-680b-4282-8228-e0e14b198cb1",
+                    "leftValue": "={{ $('Format — Category').item.json.Category }}",
+                    "rightValue": "General",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1552,
+        -32
+      ],
+      "id": "c89948ff-938a-4588-a2ac-1bdfbfc084d1",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Normalize — Support Email').item.json.Email }}",
+        "subject": "We've received your technical support request",
+        "emailType": "text",
+        "message": "=Hi,  Thank you for contacting us.  Your technical support request has been received.  Ticket ID: {{ $('Normalize — Support Email').item.json.TicketID }}  Priority: {{ $('Format — Priority').item.json.Priority }}  Our technical team will contact you shortly.  Best regards, Support Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1936,
+        -336
+      ],
+      "id": "6e3ff512-c61c-4760-b3a1-cb27fdd7203f",
+      "name": "Send a message",
+      "webhookId": "68c46f0a-f290-43b4-97e3-ba198572ed32",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Xiv6FjlERgeX4zrN",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Normalize — Support Email').item.json.Email }}",
+        "subject": "We've received your billing request",
+        "emailType": "text",
+        "message": "=Hi,  Thank you for contacting us.  Your billing request has been received.  Ticket ID: {{ $('Normalize — Support Email').item.json.TicketID }}  Priority: {{ $('Format — Priority').item.json.Priority }}  Our billing team will review your request soon.  Best regards, Support Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1936,
+        -128
+      ],
+      "id": "4eb047eb-7877-4ee1-9515-fa349405da0f",
+      "name": "Send a message1",
+      "webhookId": "68c46f0a-f290-43b4-97e3-ba198572ed32",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Xiv6FjlERgeX4zrN",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Normalize — Support Email').item.json.Email }}",
+        "subject": "We've received your request",
+        "emailType": "text",
+        "message": "=Hi,  Thank you for contacting us.  We have received your request.  Ticket ID: {{ $('Normalize — Support Email').item.json.TicketID }}  Priority: {{ $('Format — Priority').item.json.Priority }}  We will get back to you as soon as possible.  Best regards, Support Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1952,
+        64
+      ],
+      "id": "4136de7f-56fc-4bf2-93ea-9ab6695000b2",
+      "name": "Send a message2",
+      "webhookId": "68c46f0a-f290-43b4-97e3-ba198572ed32",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Xiv6FjlERgeX4zrN",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8f610e26-8987-46d5-a348-1d8f416c5512",
+              "leftValue": "={{ $('Format — Priority').item.json.Priority }}",
+              "rightValue": "High",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2176,
+        -128
+      ],
+      "id": "63bbca0b-0832-43fd-817c-cee3bcd4ccc5",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "your-support-inbox@example.com",
+        "subject": "🚨 HIGH PRIORITY SUPPORT TICKET",
+        "emailType": "text",
+        "message": "=={{\n`🚨 A high priority support ticket has been received.\n\nTicket ID: ${$('Normalize — Support Email').item.json.TicketID}\n\nCustomer: ${$('Normalize — Support Email').item.json.CustomerName}\n\nCategory: ${$('Format — Category').item.json.Category}\n\nPriority: ${$('Format — Priority').item.json.Priority}\n\nSubject: ${$('Normalize — Support Email').item.json.Subject}\n\nMessage:\n${$('Normalize — Support Email').item.json.Message}`\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2464,
+        -320
+      ],
+      "id": "89391a1e-e4c0-4d2f-97d8-59bee967a77c",
+      "name": "Send a message3",
+      "webhookId": "c45447fe-3e11-4162-a3bc-7d23094e6f51",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Xiv6FjlERgeX4zrN",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalize — Support Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize — Support Email": {
+      "main": [
+        [
+          {
+            "node": "AI — Classify Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI — Classify Ticket": {
+      "main": [
+        [
+          {
+            "node": "Format — Category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI — Assign Priority": {
+      "main": [
+        [
+          {
+            "node": "Format — Priority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format — Category": {
+      "main": [
+        [
+          {
+            "node": "AI — Assign Priority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format — Priority": {
+      "main": [
+        [
+          {
+            "node": "CRM — Create Support Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRM — Create Support Ticket": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message2": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "f6165b94-395c-4d82-a155-4a1a0360c77f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "094d1063822230f76c7079c45c78c991d19b3f193d31588e66eee702490b90e0"
+  },
+  "nodeGroups": [],
+  "id": "3JjpQBLpaItpSp0a",
+  "tags": []
+}
