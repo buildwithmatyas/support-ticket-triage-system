@@ -162,19 +162,19 @@ All scenarios produced the expected AI classification and priority assignment.
 
 ## Workflow Overview
 
-*(Add screenshot of the complete n8n workflow.)*
+![Workflow Architecture](screenshots/Architecture.png)
 
 ## Google Sheets Ticket Log
 
-*(Add screenshot showing one or more generated support tickets.)*
+![Google Sheets](screenshots/Google-Sheets.png)
 
 ## Customer Confirmation Email
 
-*(Add screenshot of the automatic confirmation email.)*
+![Gmail Response](screenshots/Confirmation-email.png)
 
 ## High-Priority Internal Alert
 
-*(Add screenshot of the internal alert email triggered only for High priority tickets.)*
+![High-Priority Alert](screenshots/Priority-alert.png)
 
 ---
 
